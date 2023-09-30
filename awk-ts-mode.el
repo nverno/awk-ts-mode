@@ -142,7 +142,6 @@
     "+" "-" "*" "/" "%" "^" "**"
     "&&" "||"
     "|" "|&"
-    "::"
     "--" "++")
   "Awk operators for tree-sitter font-lock.")
 
@@ -171,7 +170,7 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
    :language 'awk
    :feature 'string
    '((string) @font-lock-string-face
-     (regex pattern: (regex_pattern) @font-lock-string-face))
+     (regex pattern: (regex_pattern) @font-lock-regexp-face))
    
    :language 'awk
    :feature 'keyword
@@ -198,7 +197,7 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
    :feature 'function
    '((func_call
       name: (_) @font-lock-function-call-face
-      (args (identifier) @font-lock-variable-name-face) :?))
+      (args (identifier) @font-lock-variable-use-face) :?))
    
    :language 'awk
    :feature 'assignment
@@ -255,9 +254,9 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
   (when (treesit-ready-p 'awk)
     (treesit-parser-create 'awk)
 
-    (setq-local comment-start "# ")
+    (setq-local comment-start "#")
     (setq-local comment-end "")
-    (setq-local comment-start-skip (rx "#" (* (syntax whitespace))))
+    (setq-local comment-start-skip "#+[ \t]*")
 
     ;; Indentation
     (setq-local treesit-simple-indent-rules awk-ts-mode--indent-rules)

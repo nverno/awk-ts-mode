@@ -177,10 +177,6 @@ OVERRIDE, START, END, and ARGS, see `treesit-font-lock-rules'."
        (treesit-node-start node) (treesit-node-end node)
        'font-lock-variable-use-face override start end))))
 
-(defvar awk-ts-mode--function-name-query ()
-  (when (treesit-available-p)
-    (treesit-query-capture 'awk '((identifier) @id
-                                  (ns_qualified_name (namespace)) @id))))
 
 (defvar awk-ts-mode--font-lock-settings
   (treesit-font-lock-rules

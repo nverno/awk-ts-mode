@@ -1,4 +1,4 @@
-;;; awk-ts-mode.el --- Major mode for awk -*- lexical-binding: t; -*-
+;;; awk-ts-mode.el --- Major mode for awk using tree-sitter -*- lexical-binding: t; -*-
 
 ;; This is free and unencumbered software released into the public domain.
 

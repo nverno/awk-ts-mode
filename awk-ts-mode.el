@@ -91,6 +91,7 @@
      ((node-is ")") parent-bol 0)
      ((node-is "}") parent-bol 0)
      ((node-is "]") parent-bol 0)
+     ((node-is "block") parent-bol 0)
      ((parent-is "block") parent-bol awk-ts-mode-indent-level)
      ((node-is "else") parent-bol 0)
      (no-node parent-bol awk-ts-mode-indent-level)
@@ -102,8 +103,8 @@
 (defvar awk-ts-mode--feature-list
   '(( comment definition)
     ( keyword string builtin)
-    ( assignment constant literal escape-sequence)
-    ( bracket delimiter operator error function variable namespace))
+    ( assignment namespace constant literal escape-sequence)
+    ( bracket delimiter operator error function variable))
   "`treesit-font-lock-feature-list' for `awk-ts-mode'.")
 
 (defvar awk-ts-mode--keywords
@@ -138,7 +139,7 @@
 
 (defvar awk-ts-mode--operators
   '("=" "+=" "-=" "*=" "/=" "%=" "^="
-    "<" "<=" ">" ">=" "==" "!=" "~" "!~"
+    "<" "<=" ">" ">=" "==" "!=" "~" "!~" "!"
     "+" "-" "*" "/" "%" "^" "**"
     "&&" "||"
     "|" "|&"
@@ -161,6 +162,23 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
        ("identifier" 'font-lock-variable-use-face))
      override start end)))
 
+;; from `c-ts-mode--fontify-variable'
+(defun awk-ts-mode--fontify-variable (node override start end &rest _)
+  "Fontify an identifier node if it is a variable.
+Don't fontify if it is a function identifier.  For NODE,
+OVERRIDE, START, END, and ARGS, see `treesit-font-lock-rules'."
+  (when (not (equal (treesit-node-type
+                     (treesit-node-parent node))
+                    "func_call"))
+    (treesit-fontify-with-override
+     (treesit-node-start node) (treesit-node-end node)
+     'font-lock-variable-use-face override start end)))
+
+(defvar awk-ts-mode--function-name-query ()
+  (when (treesit-available-p)
+    (treesit-query-capture 'awk '((identifier) @id
+                                  (ns_qualified_name (namespace)) @id))))
+
 (defvar awk-ts-mode--font-lock-settings
   (treesit-font-lock-rules
    :language 'awk
@@ -170,14 +188,25 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
    :language 'awk
    :feature 'string
    '((string) @font-lock-string-face
-     (regex pattern: (regex_pattern) @font-lock-regexp-face))
+     (regex
+      "/" @font-lock-regexp-face
+      pattern: (regex_pattern) @font-lock-regexp-face
+      "/" @font-lock-regexp-face))
    
    :language 'awk
    :feature 'keyword
    `([,@awk-ts-mode--keywords] @font-lock-keyword-face
      [(break_statement) (continue_statement) (next_statement) (nextfile_statement)]
      @font-lock-keyword-face
-     ["@include"] @font-lock-preprocessor-face)
+     ["@include" "@namespace"] @font-lock-preprocessor-face)
+
+   ;; before fontifying function names
+   :language 'awk
+   :feature 'namespace
+   ;; :override t
+   '((ns_qualified_name
+      (namespace) @font-lock-type-face
+      "::" @font-lock-punctuation-face))
 
    :language 'awk
    :feature 'builtin
@@ -191,12 +220,12 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
    :feature 'definition
    '((func_def
       name: [(ns_qualified_name) (identifier)] @font-lock-function-name-face
-      (param_list (identifier) @font-lock-variable-name-face)))
+      (param_list (identifier) @font-lock-variable-name-face) :?))
 
    :language 'awk
    :feature 'function
    '((func_call
-      name: (_) @font-lock-function-call-face
+      name: [(identifier) (ns_qualified_name)] @font-lock-function-call-face
       (args (identifier) @font-lock-variable-use-face) :?))
    
    :language 'awk
@@ -210,35 +239,37 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
      [(regex_constant) (regex_flags)] @font-lock-constant-face)
 
    :language 'awk
-   :feature 'namespace
-   :override t
-   '((ns_qualified_name (namespace) @font-lock-type-face))
-
-   :language 'awk
    :feature 'variable
-   '((identifier) @font-lock-variable-name-face)
+   '((identifier) @awk-ts-mode--fontify-variable)
    
    :language 'awk
    :feature 'bracket
    '(["(" ")" "{" "}" "[" "]"] @font-lock-bracket-face)
 
    :language 'awk
+   :feature 'operator
+   `(["!"] @font-lock-negation-char-face
+     [,@awk-ts-mode--operators] @font-lock-operator-face
+     (ternary_exp ["?" ":"] @font-lock-operator-face))
+
+   ;; after 'operator for ":" in ternary
+   :language 'awk
    :feature 'delimiter
    '(["," ";" ":"] @font-lock-delimiter-face)
-
-   :language 'awk
-   :feature 'operator
-   `([,@awk-ts-mode--operators] @font-lock-operator-face
-     "!" @font-lock-negation-char-face)
 
    :language 'awk
    :feature 'escape-sequence
    :override t
    '((escape_sequence) @font-lock-escape-face)
-   )
+
+   :language 'awk
+   :feature 'error
+   :override t
+   '((ERROR) @font-lock-warning-face))
   "Tree-sitter font-lock settings for awk.")
 
-;;; TODO: Navigation
+;;; Navigation
+;;; TODO:
 (defun awk-ts-mode--defun-name (node)
   (treesit-node-text
    (treesit-node-child-by-field-name node "identifier")))
@@ -257,18 +288,25 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
     (setq-local comment-start "#")
     (setq-local comment-end "")
     (setq-local comment-start-skip "#+[ \t]*")
+    (setq-local parse-sexp-ignore-comments t)
 
     ;; Indentation
     (setq-local treesit-simple-indent-rules awk-ts-mode--indent-rules)
+
+    ;; Electric-indent.
+    (setq-local electric-indent-chars
+                (append "{}():;,<>/" electric-indent-chars))
+    (setq-local electric-layout-rules
+	        '((?\; . after) (?\{ . after) (?\} . before)))
 
     ;; Font-Locking
     (setq-local treesit-font-lock-settings awk-ts-mode--font-lock-settings)
     (setq-local treesit-font-lock-feature-list awk-ts-mode--feature-list)
 
-    ;; TODO: Navigation
+    ;; Navigation
     (setq-local treesit-defun-prefer-top-level t)
     (setq-local treesit-defun-name-function #'awk-ts-mode--defun-name)
-    (setq-local treesit-defun-type-regexp nil) ;; (rx bos "module")
+    (setq-local treesit-defun-type-regexp nil)
     
     ;; navigation objects
     (setq-local treesit-thing-settings
@@ -277,7 +315,7 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
                    (sentence ,awk-ts-mode--sentence-nodes)
                    (text ,awk-ts-mode--text-nodes))))
 
-    ;; TODO: Imenu
+    ;; Imenu
     (setq-local treesit-simple-imenu-settings nil)
 
     (treesit-major-mode-setup)))

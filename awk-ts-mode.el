@@ -250,7 +250,9 @@ OVERRIDE, START, END, and ARGS, see `treesit-font-lock-rules'."
    :language 'awk
    :feature 'escape-sequence
    :override t
-   '((escape_sequence) @font-lock-escape-face)
+   '((escape_sequence) @font-lock-escape-face
+     (regex_negation) @font-lock-negation-char-face
+     (regex_escape_sequence) @font-lock-misc-punctuation-face)
 
    :language 'awk
    :feature 'misc-punctuation

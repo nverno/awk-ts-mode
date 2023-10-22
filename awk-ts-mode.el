@@ -56,6 +56,11 @@
   :type 'integer
   :safe 'integerp)
 
+(defface awk-ts-mode-builtin-variable-face
+  '((t (:inherit font-lock-variable-name-face :slant italic)))
+  "Face for awk builtin variables."
+  :group 'awk)
+
 ;;; Syntax
 ;; cc-awk.el syntax table
 (defvar awk-ts-mode--syntax-table
@@ -219,7 +224,7 @@ OVERRIDE, START, END, and ARGS, see `treesit-font-lock-rules'."
      @font-lock-builtin-face
      ["print" "printf"] @font-lock-builtin-face
      ((identifier) @var (:match ,awk-ts-mode--builtin-variables @var))
-     @font-lock-variable-name-face)
+     @awk-ts-mode-builtin-variable-face)
 
    :language 'awk
    :feature 'definition

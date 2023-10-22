@@ -1,7 +1,5 @@
 ;;; awk-ts-mode.el --- Major mode for awk using tree-sitter -*- lexical-binding: t; -*-
 
-;; This is free and unencumbered software released into the public domain.
-
 ;; Author: Noah Peart <noah.v.peart@gmail.com>
 ;; URL: https://github.com/nverno/awk-ts-mode
 ;; Version: 1.0.0

@@ -85,15 +85,29 @@
 ;;; Indentation
 
 (defvar awk-ts-mode--indent-rules
-  '((awk
+  `((awk
      ((parent-is "program") parent 0)
      ((node-is ")") parent-bol 0)
      ((node-is "}") parent-bol 0)
      ((node-is "]") parent-bol 0)
      ((node-is "block") parent-bol 0)
+     ((node-is "args") parent-bol awk-ts-mode-indent-level)
+     ((parent-is "args") standalone-parent awk-ts-mode-indent-level)
+     ;; XXX: setting to align arguments to first-sibling?
+     ((parent-is "param_list") parent-bol awk-ts-mode-indent-level)
      ((parent-is "block") parent-bol awk-ts-mode-indent-level)
      ((node-is "else") parent-bol 0)
-     (no-node parent-bol awk-ts-mode-indent-level)
+     ((and no-node
+           (parent-is ,(rx (or "func_call"
+                               "grouping"
+                               "if_statement"
+                               "else_clause"
+                               "while_statement"
+                               "for_statement"
+                               "for_in_statement"
+                               "array_ref"))))
+      parent-bol awk-ts-mode-indent-level)
+     (no-node parent-bol 0)
      (catch-all parent-bol awk-ts-mode-indent-level)))
   "Tree-sitter indentation rules for awk.")
 

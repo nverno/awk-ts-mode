@@ -132,25 +132,20 @@
   "Awk keywords for tree-sitter font-locking.")
 
 (defvar awk-ts-mode--builtin-functions
-  (rx string-start
-      (or "adump" "and" "asort" "asorti" "atan2" "bindtextdomain" "close"
-          "compl" "cos" "dcgettext" "dcngettext" "exp" "extension" "fflush"
-          "gensub" "gsub" "index" "int" "isarray" "length" "log" "lshift"
-          "match" "mktime" "or" "patsplit" "print" "printf" "rand" "rshift"
-          "sin" "split" "sprintf" "sqrt" "srand" "stopme"
-          "strftime" "strtonum" "sub" "substr"  "system"
-          "systime" "tolower" "toupper" "typeof" "xor")
-      string-end)
+  '("adump" "and" "asort" "asorti" "atan2" "bindtextdomain" "close" "compl"
+    "cos" "dcgettext" "dcngettext" "exp" "extension" "fflush" "gensub" "gsub"
+    "index" "int" "isarray" "length" "log" "lshift" "match" "mktime" "or"
+    "patsplit" "print" "printf" "rand" "rshift" "sin" "split" "sprintf" "sqrt"
+    "srand" "stopme" "strftime" "strtonum" "sub" "substr" "system" "systime"
+    "tolower" "toupper" "typeof" "xor")
   "Awk builtin functions for tree-sitter font-locking.")
 
 (defvar awk-ts-mode--builtin-variables
-  (rx string-start
-      (or "ARGC" "ARGIND" "ARGV" "BINMODE" "CONVFMT" "ENVIRON"
-          "ERRNO" "FIELDWIDTHS" "FILENAME" "FNR" "FPAT" "FS" "FUNCTAB"
-          "IGNORECASE" "LINT" "NF" "NR" "OFMT" "OFS" "ORS" "PREC"
-          "PROCINFO" "RLENGTH" "ROUNDMODE" "RS" "RSTART" "RT" "SUBSEP"
-          "SYNTAB" "TEXTDOMAIN")
-      string-end)
+  '("ARGC" "ARGIND" "ARGV" "BINMODE" "CONVFMT" "ENVIRON"
+    "ERRNO" "FIELDWIDTHS" "FILENAME" "FNR" "FPAT" "FS" "FUNCTAB"
+    "IGNORECASE" "LINT" "NF" "NR" "OFMT" "OFS" "ORS" "PREC"
+    "PROCINFO" "RLENGTH" "ROUNDMODE" "RS" "RSTART" "RT" "SUBSEP"
+    "SYNTAB" "TEXTDOMAIN")
   "Awk builtin variables for tree-sitter font-lock.")
 
 (defvar awk-ts-mode--operators
@@ -218,10 +213,16 @@ OVERRIDE, START, END, and ARGS, see `treesit-font-lock-rules'."
 
    :language 'awk
    :feature 'builtin
-   `(((identifier) @var (:match ,awk-ts-mode--builtin-functions @var))
+   `(((identifier) @var
+      (:match ,(rx-to-string
+                `(seq bos (or ,@awk-ts-mode--builtin-functions) eos))
+              @var))
      @font-lock-builtin-face
      ["print" "printf"] @font-lock-builtin-face
-     ((identifier) @var (:match ,awk-ts-mode--builtin-variables @var))
+     ((identifier) @var
+      (:match ,(rx-to-string
+                `(seq bos (or ,@awk-ts-mode--builtin-variables) eos))
+              @var))
      @awk-ts-mode-builtin-variable-face)
 
    :language 'awk

@@ -170,7 +170,7 @@ For OVERRIDE, START, END, see `treesit-font-lock-rules'."
     (treesit-fontify-with-override
      (treesit-node-start node) (treesit-node-end node)
      (pcase (treesit-node-type node)
-       ("identifier" 'font-lock-variable-use-face))
+       ("identifier" 'font-lock-variable-name-face))
      override start end)))
 
 ;; from `c-ts-mode--fontify-variable'
@@ -240,7 +240,9 @@ OVERRIDE, START, END, and ARGS, see `treesit-font-lock-rules'."
    :language 'awk
    :feature 'assignment
    '((assignment_exp
-      left: (_) @awk-ts-mode--fontify-assignment-lhs))
+      left: (_) @awk-ts-mode--fontify-assignment-lhs)
+     (update_exp
+      argument: (_) @awk-ts-mode--fontify-assignment-lhs))
    
    :language 'awk
    :feature 'literal

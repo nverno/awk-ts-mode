@@ -288,7 +288,6 @@ OVERRIDE, START, END, and ARGS, see `treesit-font-lock-rules'."
 
    :language 'awk
    :feature 'error
-   :override t
    '((ERROR) @font-lock-warning-face))
   "Tree-sitter font-lock settings for awk.")
 

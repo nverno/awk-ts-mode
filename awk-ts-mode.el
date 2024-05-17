@@ -110,6 +110,7 @@
                                "for_in_statement"
                                "array_ref"))))
       parent-bol awk-ts-mode-indent-level)
+     ((parent-is "string") no-indent)
      (no-node parent-bol 0)
      (catch-all parent-bol awk-ts-mode-indent-level)))
   "Tree-sitter indentation rules for awk.")

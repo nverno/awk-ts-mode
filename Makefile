@@ -1,4 +1,4 @@
-SHELL = /bin/bash
+SHELL  = /bin/bash
 
 TSDIR   ?= $(CURDIR)/tree-sitter-awk
 TESTDIR ?= $(TSDIR)/examples
